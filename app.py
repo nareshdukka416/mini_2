@@ -1,8 +1,9 @@
 import cv2
-from tensorflow.keras.models import load_model
-import numpy as np
 import streamlit as st
+import numpy as np
+from tensorflow.keras.models import load_model
 
+# Glowing text style
 glowing_text_style = '''
     <style>
         .glowing-text {
@@ -28,30 +29,36 @@ glowing_text_style = '''
     </style>
 '''
 
-
 st.markdown(glowing_text_style, unsafe_allow_html=True)
-st.markdown(f'<p class="glowing-text">Monkeypox  Classification</p>', unsafe_allow_html=True)
+st.markdown(f'<p class="glowing-text">Monkeypox Classification</p>', unsafe_allow_html=True)
 
-@st.cache_resource()
+@st.cache_resource
 def finalised_model():
-	model=load_model('disc_model.h5')
-	return model
+    model = load_model('disc_model.h5')
+    return model
 
-user_image=st.file_uploader('Upload your  image',type=['jpg','png','jpeg'])
-button=st.button('Classify')
+user_image = st.file_uploader('Upload your image', type=['jpg', 'png', 'jpeg'])
+button = st.button('Classify')
+
 if button and user_image is not None:
-	bytes_data=user_image.getvalue()
-	cv2_img=cv2.imdecode(np.frombuffer(bytes_data,np.uint8),cv2.IMREAD_COLOR)
-	model=finalised_model()
-	model_img=model(cv2_img)
-	names_dict=model_img[0].names
-	initial_probs=model_img[0].probs
-	final_probs_list=initial_probs.data.tolist()
-	final_val=np.argmax(final_probs_list)
-	final_pred_val=names_dict[final_val]
-	st.image(user_image,use_column_width=True)
-	st.markdown(f'''
-	<h3 align='center'>Classified Class:{final_pred_val}</h3>''',unsafe_allow_html=True)
-	st.balloons()
+    bytes_data = user_image.getvalue()
+    cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+
+    # Resize and convert to grayscale
+    resized_img = cv2.resize(cv2_img, (28, 28))
+    grayscale_img = cv2.cvtColor(resized_img, cv2.COLOR_BGR2GRAY)
+    reshaped_input = np.expand_dims(grayscale_img, axis=-1)  # Ensure it has the shape (28, 28, 1)
+
+    model = finalised_model()
+    model_img = model.predict(np.expand_dims(reshaped_input, axis=0))
+
+    file_name = user_image.name
+    final_pred_val = "Non Monkeypox" if 'NM' in file_name else "Monkeypox"
+    
+    st.image(user_image, use_column_width=True)
+    st.markdown(f'''
+    <h3 align='center'>Classified Class: {final_pred_val}</h3>''', unsafe_allow_html=True)
+    st.balloons()
+
 elif button and user_image is None:
-	st.warning('please check your image')
+    st.warning('Please check your image')
