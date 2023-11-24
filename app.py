@@ -55,7 +55,7 @@ if button and user_image is not None:
     file_name = user_image.name
     final_pred_val = "Non Monkeypox" if 'NM' in file_name else "Monkeypox"
     
-    st.image(user_image, use_column_width=True)
+    st.image(user_image, use_column_width=True, width=300)
     st.markdown(f'''
     <h3 align='center'>Classified Class: {final_pred_val}</h3>''', unsafe_allow_html=True)
     st.balloons()
